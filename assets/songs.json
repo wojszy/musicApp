@@ -1,0 +1,28 @@
+{
+    "songs":[
+    {
+    "id":1,
+    "name": "Drop it",
+    "url": "https://cdn.pixabay.com/audio/2022/10/25/audio_3ea72d75c6.mp3",
+    "artist:":"Coma-Media",
+    "image":"https://cdn.pixabay.com/user/2021/11/22/12-58-14-771_250x250.jpeg",
+    "category":"electronic"
+    },
+    {
+        "id":2,
+        "name": "Mountain Path",
+        "url": "https://cdn.pixabay.com/audio/2022/11/11/audio_684ca37dc0.mp3",
+        "artist:":"Magnetic Trailer",
+        "image":"https://cdn.pixabay.com/user/2022/05/17/12-17-18-738_250x250.jpg",
+        "category":"electronic"
+        },
+        {
+            "id":3,
+            "name": "Leonell Cassio",
+            "url": "https://cdn.pixabay.com/audio/2022/08/31/audio_419263fc12.mp3",
+            "artist:":"The Blackest Bouquet",
+            "image":"https://cdn.pixabay.com/audio/2022/08/31/19-48-37-847_200x200.jpg",
+            "category":"electronic"
+            }
+]
+}
