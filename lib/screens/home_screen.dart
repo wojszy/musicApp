@@ -1,10 +1,37 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/services.dart';
+import 'package:musicapp/helper/data.dart';
+import 'package:musicapp/screens/category_screen.dart';
 import '../widgets/section_header.dart';
 import '../model/category.dart';
+import '../model/song.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  List<CategoryModel> categories = <CategoryModel>[];
+  List<MySong> songs = <MySong>[];
+
+  @override
+  void initState() {
+    super.initState();
+    categories = getCategories();
+    fetchSongsList();
+  }
+
+  fetchSongsList() async {
+    final songJson = await rootBundle.loadString("assets/songs.json");
+    songs = MySongList.fromJson(songJson).songs;
+    print(songs);
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,11 +63,11 @@ class HomeScreen extends StatelessWidget {
                     height: MediaQuery.of(context).size.height * 0.27,
                     child: ListView.builder(
                         scrollDirection: Axis.horizontal,
-                        itemCount: Category.categories.length,
+                        itemCount: categories.length,
                         itemBuilder: ((context, index) {
                           return CategoryTile(
-                            imageUrl: Category.categories[index].image,
-                            categoryName: Category.categories[index].title,
+                            imageUrl: categories[index].imageUrl,
+                            categoryName: categories[index].categoryName,
                           );
                         }))),
               ],
@@ -146,14 +173,37 @@ class _CustomAppBar extends StatelessWidget with PreferredSizeWidget {
   Size get preferredSize => Size.fromHeight(56.0);
 }
 
-class CategoryTile extends StatelessWidget {
+class CategoryTile extends StatefulWidget {
   final String imageUrl, categoryName;
   CategoryTile({required this.imageUrl, required this.categoryName});
+
+  @override
+  State<CategoryTile> createState() => _CategoryTileState();
+}
+
+class _CategoryTileState extends State<CategoryTile> {
+  List<CategoryModel> categories = <CategoryModel>[];
+  List<MySong> songs = <MySong>[];
+  @override
+  void initState() {
+    super.initState();
+    //categories = getCategories();
+    fetchSongsList();
+  }
+
+  fetchSongsList() async {
+    final songJson = await rootBundle.loadString("assets/songs.json");
+    songs = MySongList.fromJson(songJson).songs;
+    // print(songs);
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        // Navigator.push(context, MaterialPageRoute(builder: (context) => CategoryNews(category: categoryName.toLowerCase())));
+        Navigator.push(context, MaterialPageRoute(builder: (context) => CategoryMusic(songs:songs,category: widget.categoryName.toLowerCase())));
+        //print(CategoryMusic(category: widget.categoryName.toLowerCase()));
       },
       child: Container(
           width: MediaQuery.of(context).size.width * 0.45,
@@ -165,7 +215,7 @@ class CategoryTile extends StatelessWidget {
                 child: CachedNetworkImage(
                   width: 220,
                   height: 224,
-                  imageUrl: imageUrl,
+                  imageUrl: widget.imageUrl,
                   fit: BoxFit.cover,
                 ),
               ),
@@ -175,7 +225,7 @@ class CategoryTile extends StatelessWidget {
                 height: 224,
                 color: Colors.black38,
                 child: Text(
-                  categoryName,
+                  widget.categoryName,
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 16,

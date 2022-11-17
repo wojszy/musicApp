@@ -2,6 +2,7 @@
 import 'dart:convert';
 
 import 'package:collection/collection.dart';
+import 'package:flutter/foundation.dart';
 
 class MySongList {
   final List<MySong> songs;
@@ -25,7 +26,11 @@ class MySongList {
 
   factory MySongList.fromMap(Map<String, dynamic> map) {
     return MySongList(
-      songs: List<MySong>.from((map['songs'] as List<int>).map<MySong>((x) => MySong.fromMap(x as Map<String,dynamic>),),),
+      songs: List<MySong>.from(
+        (map['songs'] as List<dynamic>).map<MySong>(
+          (x) => MySong.fromMap(x as Map<String, dynamic>),
+        ),
+      ),
     );
   }
 
@@ -39,10 +44,8 @@ class MySongList {
   @override
   bool operator ==(covariant MySongList other) {
     if (identical(this, other)) return true;
-    final listEquals = const DeepCollectionEquality().equals;
-  
-    return 
-      listEquals(other.songs, songs);
+
+    return listEquals(other.songs, songs);
   }
 
   @override
@@ -55,15 +58,17 @@ class MySong {
   final String url;
   final String artist;
   final String image;
-  final String Category;
+  final String category;
   MySong({
     required this.id,
     required this.name,
     required this.url,
     required this.artist,
     required this.image,
-    required this.Category,
+    required this.category,
   });
+  static MySong fromJson(json) => MySong(
+      id: json['id'], name: json['name'], url: json['url'], artist: json['artist'], image: json['image'], category: json['category']);
 
   MySong copyWith({
     int? id,
@@ -71,7 +76,7 @@ class MySong {
     String? url,
     String? artist,
     String? image,
-    String? Category,
+    String? category,
   }) {
     return MySong(
       id: id ?? this.id,
@@ -79,7 +84,7 @@ class MySong {
       url: url ?? this.url,
       artist: artist ?? this.artist,
       image: image ?? this.image,
-      Category: Category ?? this.Category,
+      category: category ?? this.category,
     );
   }
 
@@ -90,7 +95,7 @@ class MySong {
       'url': url,
       'artist': artist,
       'image': image,
-      'Category': Category,
+      'category': category,
     };
   }
 
@@ -101,17 +106,17 @@ class MySong {
       url: map['url'] as String,
       artist: map['artist'] as String,
       image: map['image'] as String,
-      Category: map['Category'] as String,
+      category: map['category'] as String,
     );
   }
 
   String toJson() => json.encode(toMap());
 
-  factory MySong.fromJson(String source) => MySong.fromMap(json.decode(source) as Map<String, dynamic>);
+  //factory MySong.fromJson(String source) => MySong.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
   String toString() {
-    return 'MySong(id: $id, name: $name, url: $url, artist: $artist, image: $image, Category: $Category)';
+    return 'MySong(id: $id, name: $name, url: $url, artist: $artist, image: $image, category: $category)';
   }
 
   @override
@@ -123,11 +128,11 @@ class MySong {
         other.url == url &&
         other.artist == artist &&
         other.image == image &&
-        other.Category == Category;
+        other.category == category;
   }
 
   @override
   int get hashCode {
-    return id.hashCode ^ name.hashCode ^ url.hashCode ^ artist.hashCode ^ image.hashCode ^ Category.hashCode;
+    return id.hashCode ^ name.hashCode ^ url.hashCode ^ artist.hashCode ^ image.hashCode ^ category.hashCode;
   }
 }
