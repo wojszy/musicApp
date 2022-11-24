@@ -149,8 +149,8 @@ class _CustomNavBar extends StatelessWidget {
             label: 'Talk',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.favorite_rounded),
-            label: 'Favorite',
+            icon: Icon(Icons.featured_play_list_outlined),
+            label: 'My Playlist',
           ),
         ]);
   }
@@ -202,8 +202,10 @@ class _CategoryTileState extends State<CategoryTile> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        Navigator.push(context, MaterialPageRoute(builder: (context) => CategoryMusic(songs:songs,category: widget.categoryName.toLowerCase())));
-        //print(CategoryMusic(category: widget.categoryName.toLowerCase()));
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => CategoryMusic(songs: songs, category: widget.categoryName.toLowerCase(), imageUrl: widget.imageUrl)));
       },
       child: Container(
           width: MediaQuery.of(context).size.width * 0.45,
