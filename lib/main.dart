@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:musicapp/model/player_model.dart';
 import 'package:musicapp/screens/home_screen.dart';
 import 'package:musicapp/screens/playslist_screen.dart';
 import 'package:musicapp/screens/song_screen.dart';
@@ -7,9 +8,10 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 void main() {
-  runApp(
-    //ChangeNotifierProvider(create: PlayerModel()),
-    const MyApp());
+  runApp(ChangeNotifierProvider(
+    create: (context) => PlayerModel(),
+    child: const MyApp(),
+  ));
 }
 
 class MyApp extends StatelessWidget {

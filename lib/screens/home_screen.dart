@@ -4,6 +4,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/services.dart';
 import 'package:musicapp/helper/data.dart';
 import 'package:musicapp/screens/category_screen.dart';
+import 'package:provider/provider.dart';
+import '../model/player_model.dart';
 import '../widgets/section_header.dart';
 import '../model/category.dart';
 import '../model/song.dart';
@@ -86,42 +88,53 @@ class _DiscoverMusic extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Welcome',
-                  style: Theme.of(context).textTheme.headline6!.copyWith(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  'Enjoy your favorite music!',
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
-                const SizedBox(height: 20),
-              ],
+    return Consumer<PlayerModel>(
+      builder: (context, playerModel, child) => Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Welcome',
+                    style: Theme.of(context).textTheme.headline6!.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    'Enjoy your favorite music!',
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 20),
-          TextFormField(
-            decoration: InputDecoration(
-              isDense: true,
-              filled: true,
-              fillColor: Colors.white,
-              hintText: 'Search song',
-              hintStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Colors.grey.shade500),
-              prefixIcon: Icon(Icons.search, color: Colors.grey.shade500),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.0), borderSide: BorderSide.none),
+            const SizedBox(height: 20),
+            TextFormField(
+              decoration: InputDecoration(
+                isDense: true,
+                filled: true,
+                fillColor: Colors.white,
+                hintText: 'Search song',
+                hintStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Colors.grey.shade500),
+                prefixIcon: Icon(Icons.search, color: Colors.grey.shade500),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.0), borderSide: BorderSide.none),
+              ),
             ),
-          )
-        ],
+            SizedBox(
+              height: 30,
+              child: Text(
+                'Current Playing: ${playerModel.songs[playerModel.index].artist}'
+                ' - '
+                '${playerModel.songs[playerModel.index].name}',
+                //textAlign: TextAlign.left,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

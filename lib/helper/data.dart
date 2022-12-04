@@ -12,7 +12,8 @@ List<CategoryModel> getCategories() {
 //2
   categoryModel = new CategoryModel();
   categoryModel.categoryName = "Rock";
-  categoryModel.imageUrl = "https://images.saymedia-content.com/.image/t_share/MTc0NDg3MzAyOTgxMzYzMzM0/100-best-rock-songs-of-the-80s.jpg";
+  categoryModel.imageUrl =
+      "https://images.saymedia-content.com/.image/t_share/MTc0NDg3MzAyOTgxMzYzMzM0/100-best-rock-songs-of-the-80s.jpg";
   categories.add(categoryModel);
 
   return categories;

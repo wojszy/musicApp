@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:musicapp/model/player_model.dart';
 import 'package:musicapp/screens/home_screen.dart';
+import 'package:provider/provider.dart';
 
 import '../helper/data.dart';
 import '../model/category.dart';
@@ -26,83 +28,161 @@ class CategoryMusic extends StatefulWidget {
 
 class _CategoryMusicState extends State<CategoryMusic> {
   //List<CategoryModel> categories = <CategoryModel>[];
-  String currentPlaying = '';
-  getUrl(url) {
+  late List<MySong> songs;
+  late Color _selectedColor;
+  bool _isPlaying = false;
+  String selectedSong = '';
+  String songName = '';
+  String songArtist = '';
+  getDataSong(name, artist) {
     setState(() {
-      currentPlaying = url;
+      songName = name;
+      songArtist = artist;
     });
+  }
+
+  // getUrl(url) {
+  //   setState(() {
+  //     selectedSong = url;
+  //   });
+  // }
+
+  static AudioPlayer _audioPlayer = AudioPlayer();
+
+  _playMusic(playlist, index) {
+    //_audioPlayer.setUrl(url);
+    setState(() {
+      _isPlaying = true;
+    });
+    _audioPlayer.setAudioSource(playlist, initialIndex: index, initialPosition: Duration.zero);
+    _audioPlayer.play();
+  }
+
+  _stopMusic() {
+    setState(() {
+      _isPlaying = false;
+    });
+    _audioPlayer.stop();
+  }
+
+  _pauseMusic() {
+    setState(() {
+      _isPlaying = false;
+    });
+    _audioPlayer.pause();
   }
 
   @override
   Widget build(BuildContext context) {
-    AudioPlayer audioPlayer = AudioPlayer();
     // String? currentPlaying;
-    return Container(
-      decoration: BoxDecoration(
-          gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [
-        Colors.deepPurple.shade800,
-        Colors.deepPurple.shade200,
-      ])),
-      child: Scaffold(
-          backgroundColor: Colors.transparent,
-          appBar: AppBar(
-              centerTitle: true,
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              title: Text(
-                'Playlist ' + widget.category,
-              )),
-          body: SingleChildScrollView(
+    return Consumer<PlayerModel>(
+      builder: (context, playerModel, child) => Container(
+          decoration: BoxDecoration(
+              gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [
+            Colors.deepPurple.shade800,
+            Colors.deepPurple.shade200,
+          ])),
+          child: Scaffold(
+            backgroundColor: Colors.transparent,
+            appBar: AppBar(
+                centerTitle: true,
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                title: Text(
+                  'Playlist ' + widget.category,
+                )),
+            body: SingleChildScrollView(
               child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(15.0),
-                child: Image.network(
-                  widget.imageUrl,
-                  height: MediaQuery.of(context).size.height * 0.3,
-                  width: MediaQuery.of(context).size.height * 0.3,
-                  fit: BoxFit.cover,
-                ),
+                padding: const EdgeInsets.all(8.0),
+                child: Column(children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(15.0),
+                    child: Image.network(
+                      widget.imageUrl,
+                      height: MediaQuery.of(context).size.height * 0.3,
+                      width: MediaQuery.of(context).size.height * 0.3,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  _PlayOrShuffleSwitch(),
+                  // Text('Category: ' + widget.category, style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.3,
+                    child: buildSongs(widget.songs, widget.category, playerModel),
+                  ),
+                  SizedBox(
+                    height: 40,
+                  ),
+                  SizedBox(
+                    height: 30,
+                    child: Text(
+                      'Current Playing: ${playerModel.songs[playerModel.index].artist}'
+                      ' - '
+                      '${playerModel.songs[playerModel.index].name}',
+                      //textAlign: TextAlign.left,
+                    ),
+                  ),
+                  // SizedBox(
+                  //   child: _CustomPlayer(),
+                  // ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      InkWell(
+                          onTap: () {
+                            _audioPlayer.seekToPrevious();
+
+                            if (playerModel.index == 0) {
+                              _audioPlayer.seek(Duration.zero, index: 0);
+                            } else {
+                              playerModel.decrementIndex();
+                            }
+                          },
+                          child: Icon(Icons.arrow_back_ios_outlined)),
+                      SizedBox(
+                          child: _audioPlayer.playing
+                              ? GestureDetector(
+                                  child: Icon(Icons.pause),
+                                  onTap: () {
+                                    _pauseMusic();
+                                  },
+                                )
+                              : GestureDetector(
+                                  child: Icon(Icons.play_arrow),
+                                  onTap: () {
+                                    _audioPlayer.play();
+                                    setState(() {
+                                      _isPlaying = true;
+                                    });
+                                  })),
+                      InkWell(
+                          onTap: () {
+                            _audioPlayer.seekToNext();
+
+                            playerModel.incrementIndex();
+                            if (playerModel.index == 0) {
+                              _audioPlayer.seek(Duration.zero, index: 0);
+                            }
+                          },
+                          child: Icon(Icons.arrow_forward_ios_outlined)),
+                    ],
+                  )
+                ]),
               ),
-              const SizedBox(height: 30),
-              _PlayOrShuffleSwitch(),
-              // Text('Category: ' + widget.category, style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
-              SizedBox(
-                height: MediaQuery.of(context).size.height * 0.3,
-                child: buildSongs(widget.songs, widget.category, getUrl),
-              ),
-              const SizedBox(
-                height: 30,
-                child: Text(
-                  'Current Playing:',
-                  //textAlign: TextAlign.left,
-                ),
-              ),
-              SizedBox(
-                child: _CustomPlayer(),
-              ),
-              SizedBox(
-                child: GestureDetector(
-                    onTap: () {
-                      print(currentPlaying);
-                      
-                    },
-                    child: Icon(Icons.play_arrow)),
-              ),
-            ]),
-          ))),
+            ),
+          )),
     );
   }
 
-  Widget buildSongs(List<MySong> songs, String category, getUrl) {
+  Widget buildSongs(List<MySong> songs, String category, playerModel) {
     List<AudioSource> songPlaylist = [];
     for (var song in songs) {
       if (song.category == category) {
         songPlaylist.add(
           AudioSource.uri(Uri.parse(song.url)),
         );
-       //   print(song.name);
+        //   print(song.name);
       }
     }
     final playlist = ConcatenatingAudioSource(
@@ -113,7 +193,6 @@ class _CategoryMusicState extends State<CategoryMusic> {
         // Specify the playlist items
         children: songPlaylist);
     return ListView.builder(
-      // physics: const NeverScrollableScrollPhysics(),
       scrollDirection: Axis.vertical,
       shrinkWrap: true,
       itemCount: songs.length,
@@ -122,8 +201,14 @@ class _CategoryMusicState extends State<CategoryMusic> {
             ? Card(
                 child: ListTile(
                 onTap: () {
-                  getUrl(songs[index].url);
-                  
+                  playerModel.ChangePlayerState(songs, index);
+                  //getUrl(songs[index].url);
+                  _stopMusic();
+                  if (_audioPlayer.playing) {
+                    _audioPlayer.stop();
+                  } else {
+                    _playMusic(playlist, index);
+                  }
                 },
                 tileColor: Colors.purple.shade300,
                 leading: CircleAvatar(
@@ -232,12 +317,7 @@ class _CustomPlayer extends StatelessWidget {
         alignment: AlignmentDirectional.bottomEnd,
         decoration: BoxDecoration(color: Colors.deepPurple.withOpacity(0.5)),
         child: Column(
-          children: [
-            Slider.adaptive(
-              value: 0,
-              onChanged: (value) {},
-            ),
-          ],
+          children: [],
         ));
   }
 }

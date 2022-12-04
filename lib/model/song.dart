@@ -36,7 +36,8 @@ class MySongList {
 
   String toJson() => json.encode(toMap());
 
-  factory MySongList.fromJson(String source) => MySongList.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory MySongList.fromJson(String source) =>
+      MySongList.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
   String toString() => 'MySongList(songs: $songs)';
@@ -68,7 +69,12 @@ class MySong {
     required this.category,
   });
   static MySong fromJson(json) => MySong(
-      id: json['id'], name: json['name'], url: json['url'], artist: json['artist'], image: json['image'], category: json['category']);
+      id: json['id'],
+      name: json['name'],
+      url: json['url'],
+      artist: json['artist'],
+      image: json['image'],
+      category: json['category']);
 
   MySong copyWith({
     int? id,
@@ -133,6 +139,11 @@ class MySong {
 
   @override
   int get hashCode {
-    return id.hashCode ^ name.hashCode ^ url.hashCode ^ artist.hashCode ^ image.hashCode ^ category.hashCode;
+    return id.hashCode ^
+        name.hashCode ^
+        url.hashCode ^
+        artist.hashCode ^
+        image.hashCode ^
+        category.hashCode;
   }
 }
