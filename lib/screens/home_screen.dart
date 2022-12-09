@@ -1,7 +1,9 @@
+import 'package:alan_voice/alan_voice.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/services.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:musicapp/helper/data.dart';
 import 'package:musicapp/screens/category_screen.dart';
 import 'package:provider/provider.dart';
@@ -20,10 +22,11 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   List<CategoryModel> categories = <CategoryModel>[];
   List<MySong> songs = <MySong>[];
-
+  // static AudioPlayer _audioPlayer = AudioPlayer();
   @override
   void initState() {
     super.initState();
+    setupAlan();
     categories = getCategories();
     fetchSongsList();
   }
@@ -35,47 +38,135 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {});
   }
 
+  setupAlan() {
+    AlanVoice.addButton("a0bfd35a2c6bc34391f94ad34f381b302e956eca572e1d8b807a3e2338fdd0dc/stage",
+        buttonAlign: AlanVoice.BUTTON_ALIGN_RIGHT);
+
+    AlanVoice.callbacks.add((command) => _handleCommand(command.data, PlayerModel()));
+  }
+
+  void _handleCommand(Map<String, dynamic> response, PlayerModel playerModel) {
+    switch (response["command"]) {
+      case "play":
+        //Provider.of<PlayerModel>(context, listen: false).playMusic();
+        break;
+      case "pause":
+        Provider.of<PlayerModel>(context, listen: false).pauseMusic();
+        break;
+      case "unpause":
+        Provider.of<PlayerModel>(context, listen: false).unPauseMusic();
+        break;
+      case "next":
+        Provider.of<PlayerModel>(context, listen: false).audioPlayer.seekToNext();
+
+        Provider.of<PlayerModel>(context, listen: false).incrementIndex();
+        if (Provider.of<PlayerModel>(context, listen: false).index == 0) {
+          Provider.of<PlayerModel>(context, listen: false).audioPlayer.seek(Duration.zero, index: 0);
+        } else {}
+        ;
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-          gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [
-        Colors.deepPurple.shade800,
-        Colors.deepPurple.shade200,
-      ])),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: const _CustomAppBar(),
-        bottomNavigationBar: const _CustomNavBar(),
-        body: SingleChildScrollView(
-            child: Column(children: [
-          const _DiscoverMusic(),
-          Padding(
-            padding: const EdgeInsets.only(left: 20.0, top: 20.0, bottom: 20.0),
-            child: Column(
-              children: [
-                const Padding(
-                  padding: EdgeInsets.only(
-                    right: 20.0,
-                  ),
-                  child: SectionHeader(title: 'Choose music category'),
-                ),
-                const SizedBox(height: 20),
-                SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.27,
-                    child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: categories.length,
-                        itemBuilder: ((context, index) {
-                          return CategoryTile(
-                            imageUrl: categories[index].imageUrl,
-                            categoryName: categories[index].categoryName,
-                          );
-                        }))),
-              ],
-            ),
-          ),
+    return Consumer<PlayerModel>(
+      builder: (context, playerModel, child) => Container(
+        decoration: BoxDecoration(
+            gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [
+          Colors.deepPurple.shade800,
+          Colors.deepPurple.shade200,
         ])),
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: const _CustomAppBar(),
+          bottomNavigationBar: const _CustomNavBar(),
+          body: SingleChildScrollView(
+              child: Column(children: [
+            const _DiscoverMusic(),
+            Padding(
+              padding: const EdgeInsets.only(left: 20.0, top: 20.0, bottom: 20.0),
+              child: Column(
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(
+                      right: 20.0,
+                    ),
+                    child: SectionHeader(title: 'Choose music category'),
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.27,
+                      child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: categories.length,
+                          itemBuilder: ((context, index) {
+                            return CategoryTile(
+                              imageUrl: categories[index].imageUrl,
+                              categoryName: categories[index].categoryName,
+                            );
+                          }))),
+                  SizedBox(
+                    height: 100,
+                  ),
+                  SizedBox(
+                    height: 30,
+                    child: Text(
+                      'Current Playing: ${playerModel.songs[playerModel.index].artist}'
+                      ' - '
+                      '${playerModel.songs[playerModel.index].name}',
+                      //textAlign: TextAlign.left,
+                    ),
+                  ),
+                  SizedBox(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        InkWell(
+                            onTap: () {
+                              playerModel.audioPlayer.seekToPrevious();
+
+                              if (playerModel.index == 0) {
+                                playerModel.audioPlayer.seek(Duration.zero, index: 0);
+                              } else {
+                                playerModel.decrementIndex();
+                              }
+                            },
+                            child: Icon(Icons.arrow_back_ios_outlined)),
+                        SizedBox(
+                            child: playerModel.audioPlayer.playing
+                                ? GestureDetector(
+                                    child: Icon(Icons.pause),
+                                    onTap: () {
+                                      playerModel.pauseMusic();
+                                    },
+                                  )
+                                : GestureDetector(
+                                    child: Icon(Icons.play_arrow),
+                                    onTap: () {
+                                      playerModel.audioPlayer.play();
+                                      setState(() {
+                                        playerModel.isPlaying = true;
+                                      });
+                                    })),
+                        InkWell(
+                            onTap: () {
+                              playerModel.audioPlayer.seekToNext();
+
+                              playerModel.incrementIndex();
+                              if (playerModel.index == 0) {
+                                playerModel.audioPlayer.seek(Duration.zero, index: 0);
+                              }
+                            },
+                            child: Icon(Icons.arrow_forward_ios_outlined)),
+                      ],
+                    ),
+                  )
+                ],
+              ),
+            ),
+          ])),
+        ),
       ),
     );
   }
@@ -122,15 +213,6 @@ class _DiscoverMusic extends StatelessWidget {
                 hintStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Colors.grey.shade500),
                 prefixIcon: Icon(Icons.search, color: Colors.grey.shade500),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.0), borderSide: BorderSide.none),
-              ),
-            ),
-            SizedBox(
-              height: 30,
-              child: Text(
-                'Current Playing: ${playerModel.songs[playerModel.index].artist}'
-                ' - '
-                '${playerModel.songs[playerModel.index].name}',
-                //textAlign: TextAlign.left,
               ),
             ),
           ],

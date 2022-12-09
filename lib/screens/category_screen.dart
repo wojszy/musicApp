@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:alan_voice/alan_voice.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
@@ -39,6 +40,11 @@ class _CategoryMusicState extends State<CategoryMusic> {
       songName = name;
       songArtist = artist;
     });
+    // @override
+    // initState() {
+    //   super.initState();
+    //   setupAlan();
+    // }
   }
 
   // getUrl(url) {
@@ -47,30 +53,47 @@ class _CategoryMusicState extends State<CategoryMusic> {
   //   });
   // }
 
-  static AudioPlayer _audioPlayer = AudioPlayer();
+  // static AudioPlayer _audioPlayer = AudioPlayer();
 
-  _playMusic(playlist, index) {
-    //_audioPlayer.setUrl(url);
-    setState(() {
-      _isPlaying = true;
-    });
-    _audioPlayer.setAudioSource(playlist, initialIndex: index, initialPosition: Duration.zero);
-    _audioPlayer.play();
-  }
+  // _playMusic(playlist, index) {
+  //   //_audioPlayer.setUrl(url);
+  //   setState(() {
+  //     _isPlaying = true;
+  //   });
+  //   _audioPlayer.setAudioSource(playlist, initialIndex: index, initialPosition: Duration.zero);
+  //   _audioPlayer.play();
+  // }
 
-  _stopMusic() {
-    setState(() {
-      _isPlaying = false;
-    });
-    _audioPlayer.stop();
-  }
+  // _stopMusic() {
+  //   setState(() {
+  //     _isPlaying = false;
+  //   });
+  //   _audioPlayer.stop();
+  // }
 
-  _pauseMusic() {
-    setState(() {
-      _isPlaying = false;
-    });
-    _audioPlayer.pause();
-  }
+  // _pauseMusic() {
+  //   setState(() {
+  //     _isPlaying = false;
+  //   });
+  //   _audioPlayer.pause();
+  // }
+
+  // setupAlan() {
+  //   AlanVoice.addButton("a0bfd35a2c6bc34391f94ad34f381b302e956eca572e1d8b807a3e2338fdd0dc/stage",
+  //       buttonAlign: AlanVoice.BUTTON_ALIGN_RIGHT);
+
+  //   AlanVoice.callbacks.add((command) => _handleCommand(command.data, PlayerModel()));
+  // }
+
+  // void _handleCommand(Map<String, dynamic> response, PlayerModel playerModel) {
+  //   switch (response["command"]) {
+  //     case "pause":
+  //       // print(
+  //       //     "EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");
+  //       Provider.of<PlayerModel>(context, listen: false).pauseMusic();
+  //       break;
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -123,46 +146,46 @@ class _CategoryMusicState extends State<CategoryMusic> {
                       //textAlign: TextAlign.left,
                     ),
                   ),
-                  // SizedBox(
-                  //   child: _CustomPlayer(),
-                  // ),
+
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       InkWell(
                           onTap: () {
-                            _audioPlayer.seekToPrevious();
+                            playerModel.audioPlayer.seekToPrevious();
+                            // _audioPlayer.seekToPrevious();
 
                             if (playerModel.index == 0) {
-                              _audioPlayer.seek(Duration.zero, index: 0);
+                              playerModel.audioPlayer.seek(Duration.zero, index: 0);
+                              //_audioPlayer.seek(Duration.zero, index: 0);
                             } else {
                               playerModel.decrementIndex();
                             }
                           },
                           child: Icon(Icons.arrow_back_ios_outlined)),
                       SizedBox(
-                          child: _audioPlayer.playing
+                          child: playerModel.audioPlayer.playing
                               ? GestureDetector(
                                   child: Icon(Icons.pause),
                                   onTap: () {
-                                    _pauseMusic();
+                                    playerModel.pauseMusic();
                                   },
                                 )
                               : GestureDetector(
                                   child: Icon(Icons.play_arrow),
                                   onTap: () {
-                                    _audioPlayer.play();
+                                    playerModel.audioPlayer.play();
                                     setState(() {
-                                      _isPlaying = true;
+                                      playerModel.isPlaying = true;
                                     });
                                   })),
                       InkWell(
                           onTap: () {
-                            _audioPlayer.seekToNext();
+                            playerModel.audioPlayer.seekToNext();
 
                             playerModel.incrementIndex();
                             if (playerModel.index == 0) {
-                              _audioPlayer.seek(Duration.zero, index: 0);
+                              playerModel.audioPlayer.seek(Duration.zero, index: 0);
                             }
                           },
                           child: Icon(Icons.arrow_forward_ios_outlined)),
@@ -185,6 +208,7 @@ class _CategoryMusicState extends State<CategoryMusic> {
         //   print(song.name);
       }
     }
+
     final playlist = ConcatenatingAudioSource(
         // Start loading next item just before reaching it
         useLazyPreparation: true,
@@ -203,11 +227,11 @@ class _CategoryMusicState extends State<CategoryMusic> {
                 onTap: () {
                   playerModel.ChangePlayerState(songs, index);
                   //getUrl(songs[index].url);
-                  _stopMusic();
-                  if (_audioPlayer.playing) {
-                    _audioPlayer.stop();
+                  playerModel.stopMusic();
+                  if (playerModel.audioPlayer.playing) {
+                    playerModel.audioPlayer.stop();
                   } else {
-                    _playMusic(playlist, index);
+                    playerModel.playMusic(playlist, index);
                   }
                 },
                 tileColor: Colors.purple.shade300,
@@ -302,22 +326,5 @@ class _PlayOrShuffleSwitchState extends State<_PlayOrShuffleSwitch> {
         ),
       ),
     );
-  }
-}
-
-class _CustomPlayer extends StatelessWidget {
-  const _CustomPlayer({
-    Key? key,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-        height: MediaQuery.of(context).size.height * 0.1,
-        alignment: AlignmentDirectional.bottomEnd,
-        decoration: BoxDecoration(color: Colors.deepPurple.withOpacity(0.5)),
-        child: Column(
-          children: [],
-        ));
   }
 }
