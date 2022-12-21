@@ -12,8 +12,13 @@ List<CategoryModel> getCategories() {
 //2
   categoryModel = new CategoryModel();
   categoryModel.categoryName = "Rock";
-  categoryModel.imageUrl =
-      "https://images.saymedia-content.com/.image/t_share/MTc0NDg3MzAyOTgxMzYzMzM0/100-best-rock-songs-of-the-80s.jpg";
+  categoryModel.imageUrl = "https://images.saymedia-content.com/.image/t_share/MTc0NDg3MzAyOTgxMzYzMzM0/100-best-rock-songs-of-the-80s.jpg";
+  categories.add(categoryModel);
+
+  //3
+  categoryModel = new CategoryModel();
+  categoryModel.categoryName = "Jazz";
+  categoryModel.imageUrl = "https://laboratoriummf.com/wp-content/uploads/2014/03/dixie_jazz_5-3.jpg";
   categories.add(categoryModel);
 
   return categories;

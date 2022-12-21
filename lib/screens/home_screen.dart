@@ -11,6 +11,7 @@ import '../model/player_model.dart';
 import '../widgets/section_header.dart';
 import '../model/category.dart';
 import '../model/song.dart';
+import 'package:volume_control/volume_control.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -22,6 +23,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   List<CategoryModel> categories = <CategoryModel>[];
   List<MySong> songs = <MySong>[];
+
   // static AudioPlayer _audioPlayer = AudioPlayer();
   @override
   void initState() {
@@ -29,8 +31,19 @@ class _HomeScreenState extends State<HomeScreen> {
     setupAlan();
     categories = getCategories();
     fetchSongsList();
+    initVolumeState();
   }
 
+//init volume_control plugin
+  Future<void> initVolumeState() async {
+    if (!mounted) return;
+
+    //read the current volume
+    _val = await VolumeControl.volume;
+    setState(() {});
+  }
+
+  late double _val;
   fetchSongsList() async {
     final songJson = await rootBundle.loadString("assets/songs.json");
     songs = MySongList.fromJson(songJson).songs;
@@ -42,10 +55,10 @@ class _HomeScreenState extends State<HomeScreen> {
     AlanVoice.addButton("a0bfd35a2c6bc34391f94ad34f381b302e956eca572e1d8b807a3e2338fdd0dc/stage",
         buttonAlign: AlanVoice.BUTTON_ALIGN_RIGHT);
 
-    AlanVoice.callbacks.add((command) => _handleCommand(command.data, PlayerModel()));
+    AlanVoice.callbacks.add((command) => _handleCommand(command.data, PlayerModel(), CategoryModel()));
   }
 
-  void _handleCommand(Map<String, dynamic> response, PlayerModel playerModel) {
+  void _handleCommand(Map<String, dynamic> response, PlayerModel playerModel, CategoryModel categoryModel) {
     switch (response["command"]) {
       case "play":
         //Provider.of<PlayerModel>(context, listen: false).playMusic();
@@ -56,14 +69,102 @@ class _HomeScreenState extends State<HomeScreen> {
       case "unpause":
         Provider.of<PlayerModel>(context, listen: false).unPauseMusic();
         break;
+
+      case "volumeUp":
+        double val = _val * 1.2;
+        VolumeControl.setVolume(val);
+        print("current val: $_val");
+
+        break;
       case "next":
         Provider.of<PlayerModel>(context, listen: false).audioPlayer.seekToNext();
-
         Provider.of<PlayerModel>(context, listen: false).incrementIndex();
         if (Provider.of<PlayerModel>(context, listen: false).index == 0) {
           Provider.of<PlayerModel>(context, listen: false).audioPlayer.seek(Duration.zero, index: 0);
         } else {}
-        ;
+        if (Provider.of<PlayerModel>(context, listen: false).audioPlayer.playing == false) {
+          Provider.of<PlayerModel>(context, listen: false).audioPlayer.play();
+        }
+        break;
+      case "previous":
+        Provider.of<PlayerModel>(context, listen: false).audioPlayer.seekToPrevious();
+
+        if (Provider.of<PlayerModel>(context, listen: false).index == 0) {
+          Provider.of<PlayerModel>(context, listen: false).audioPlayer.seek(Duration.zero, index: 0);
+          Provider.of<PlayerModel>(context, listen: false).isPlaying = true;
+          //_audioPlayer.seek(Duration.zero, index: 0);
+        } else {
+          Provider.of<PlayerModel>(context, listen: false).decrementIndex();
+          if (Provider.of<PlayerModel>(context, listen: false).audioPlayer.playing == false) {
+            Provider.of<PlayerModel>(context, listen: false).isPlaying = true;
+            Provider.of<PlayerModel>(context, listen: false).audioPlayer.play();
+          }
+        }
+        break;
+
+      case "play_category":
+        fetchSongsList();
+        final categoryAi = response["category"];
+        List<AudioSource> categoryPlaylist_list = [];
+
+        final CategoryModel cat = categories.firstWhere((element) => element.categoryName.toLowerCase() == categoryAi);
+        if (cat == null) {
+          print("Nie znaleziono");
+        } else {
+          final categoryImage = cat.imageUrl;
+          Navigator.push(
+              context, MaterialPageRoute(builder: (context) => CategoryMusic(songs: songs, category: categoryAi, imageUrl: categoryImage)));
+
+          Provider.of<PlayerModel>(context, listen: false).audioPlayer.pause();
+          songs.removeWhere((element) => element.category != categoryAi);
+          for (var song in songs) {
+            if (song.category.toLowerCase() == categoryAi) {
+              categoryPlaylist_list.add(AudioSource.uri(Uri.parse(song.url)));
+            }
+          }
+
+          final categoryPlaylist =
+              ConcatenatingAudioSource(useLazyPreparation: true, shuffleOrder: DefaultShuffleOrder(), children: categoryPlaylist_list);
+          if (Provider.of<PlayerModel>(context, listen: false).audioPlayer.playing) {
+            Provider.of<PlayerModel>(context, listen: false).stopMusic();
+          } else {
+            Provider.of<PlayerModel>(context, listen: false).ChangePlayerState(songs, 0);
+            Provider.of<PlayerModel>(context, listen: false).playMusic(categoryPlaylist, 0);
+          }
+
+          //   print(song.name);
+        }
+
+        break;
+      case "play_music":
+        final musicAi = response["music"];
+        fetchSongsList();
+        List<AudioSource> searchPlaylist_list = [];
+        if (musicAi == null) {
+          print("To jest null");
+        } else {
+          songs.removeWhere((element) => element.name.toLowerCase() != musicAi);
+          for (var song in songs) {
+            if (song.name.toLowerCase() == musicAi) {
+              searchPlaylist_list.add(AudioSource.uri(Uri.parse(song.url)));
+            }
+          }
+          final searchSong =
+              ConcatenatingAudioSource(useLazyPreparation: true, shuffleOrder: DefaultShuffleOrder(), children: searchPlaylist_list);
+          if (Provider.of<PlayerModel>(context, listen: false).audioPlayer.playing) {
+            Provider.of<PlayerModel>(context, listen: false).stopMusic();
+          } else {
+            Provider.of<PlayerModel>(context, listen: false).ChangePlayerState(songs, 0);
+            Provider.of<PlayerModel>(context, listen: false).playMusic(searchSong, 0);
+            // Provider.of<PlayerModel>(context, listen: false)
+            //     .audioPlayer
+            //     .setAudioSource(searchSong, initialIndex: 0, initialPosition: Duration.zero);
+            // Provider.of<PlayerModel>(context, listen: false).audioPlayer.play();
+          }
+
+          //   print(song.name);
+        }
+
         break;
     }
   }
@@ -80,7 +181,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Scaffold(
           backgroundColor: Colors.transparent,
           appBar: const _CustomAppBar(),
-          bottomNavigationBar: const _CustomNavBar(),
+          //bottomNavigationBar: const _CustomNavBar(),
           body: SingleChildScrollView(
               child: Column(children: [
             const _DiscoverMusic(),
@@ -222,34 +323,34 @@ class _DiscoverMusic extends StatelessWidget {
   }
 }
 
-class _CustomNavBar extends StatelessWidget {
-  const _CustomNavBar({
-    Key? key,
-  }) : super(key: key);
+// class _CustomNavBar extends StatelessWidget {
+//   const _CustomNavBar({
+//     Key? key,
+//   }) : super(key: key);
 
-  @override
-  Widget build(BuildContext context) {
-    return BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.deepPurple.shade800,
-        selectedItemColor: Colors.white,
-        unselectedItemColor: Colors.white,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.mic),
-            label: 'Talk',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.featured_play_list_outlined),
-            label: 'My Playlist',
-          ),
-        ]);
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return BottomNavigationBar(
+//         type: BottomNavigationBarType.fixed,
+//         backgroundColor: Colors.deepPurple.shade800,
+//         selectedItemColor: Colors.white,
+//         unselectedItemColor: Colors.white,
+//         items: const [
+//           BottomNavigationBarItem(
+//             icon: Icon(Icons.home),
+//             label: 'Home',
+//           ),
+//           BottomNavigationBarItem(
+//             icon: Icon(Icons.mic),
+//             label: 'Talk',
+//           ),
+//           BottomNavigationBarItem(
+//             icon: Icon(Icons.featured_play_list_outlined),
+//             label: 'My Playlist',
+//           ),
+//         ]);
+//   }
+// }
 
 class _CustomAppBar extends StatelessWidget with PreferredSizeWidget {
   const _CustomAppBar({Key? key}) : super(key: key);

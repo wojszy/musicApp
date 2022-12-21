@@ -30,23 +30,77 @@
         "url": "https://cdn.pixabay.com/audio/2022/11/23/audio_5510021645.mp3",
         "artist": "AlexiAction",
         "image": "https://cdn.pixabay.com/audio/2022/11/23/21-30-37-211_200x200.jpg",
-        "category": "electronic"
+        "category": "rock"
         },
         {
             "id":5,
-            "name": "Technology",
-            "url": "https://cdn.pixabay.com/audio/2022/11/23/audio_5510021645.mp3",
-            "artist": "AlexiAction",
-            "image": "https://cdn.pixabay.com/audio/2022/11/23/21-30-37-211_200x200.jpg",
-            "category": "electronic"
+            "name": "Dedication",
+            "url": "https://cdn.pixabay.com/audio/2022/01/18/audio_213454d871.mp3",
+            "artist": "AlexGrohl",
+            "image": "https://cdn.pixabay.com/audio/2022/04/13/11-23-11-572_200x200.jpg",
+            "category": "rock"
             },
             {
                 "id":6,
-                "name": "Technology",
-                "url": "https://cdn.pixabay.com/audio/2022/11/23/audio_5510021645.mp3",
-                "artist": "AlexiAction",
-                "image": "https://cdn.pixabay.com/audio/2022/11/23/21-30-37-211_200x200.jpg",
-                "category": "electronic"
-                }
+                "name": "Jingle Bells Rock",
+                "url": "https://cdn.pixabay.com/audio/2022/11/12/audio_46d158e426.mp3",
+                "artist": "Dmitry Taras",
+                "image": "https://cdn.pixabay.com/audio/2022/11/12/10-37-41-776_200x200.jpg",
+                "category": "rock"
+                },
+            {
+                "id":7,
+                "name": "Rock N Christmas 80s",
+                "url": "https://cdn.pixabay.com/audio/2022/11/28/audio_69a19747e4.mp3",
+                "artist": "Grand Project",
+                "image": "https://cdn.pixabay.com/audio/2022/11/28/17-42-49-964_200x200.jpg",
+                "category": "rock"
+            },
+            {
+                "id":8,
+                "name": "Quick Start",
+                "url": "https://cdn.pixabay.com/audio/2022/02/28/audio_30631fdfa5.mp3",
+                "artist": "LemonMusicStudio",
+                "image": "https://cdn.pixabay.com/audio/2022/04/06/06-59-22-714_200x200.png",
+                "category": "rock"
+            },
+            {
+                "id":9,
+                "name": "Epic Hybrid",
+                "url": "https://cdn.pixabay.com/audio/2022/12/13/audio_9543a3b22b.mp3",
+                "artist": "The Mountain",
+                "image": "https://cdn.pixabay.com/audio/2022/12/13/09-56-15-492_200x200.png",
+                "category": "rock"
+            },
+            {
+                "id":10,
+                "name": "Christmass Jazz",
+                "url": "https://cdn.pixabay.com/audio/2022/07/11/audio_96300a23ea.mp3",
+                "artist": "Audio Coffee",
+                "image": "https://cdn.pixabay.com/audio/2022/07/11/19-13-17-766_200x200.jpg",
+                "category": "jazz"  
+            },
+            {
+                "id":11,
+                "name": "BeBop for Joey",
+                "url": "https://cdn.pixabay.com/audio/2022/11/30/audio_2e3b12990e.mp3",
+                "artist": "KMac Leod",
+                "image": "https://cdn.pixabay.com/audio/2022/11/30/20-47-52-441_200x200.png",
+                "category": "jazz"
+            },
+            {
+                "id":12,
+                "name": "Remade Paths",
+                "url": "https://cdn.pixabay.com/audio/2022/08/26/audio_31ddc9e228.mp3",
+                "artist": "Trygve Larsen",
+                "image": "https://cdn.pixabay.com/audio/2022/08/27/06-47-43-631_200x200.jpg",
+                "category": "jazz"
+            }
+
+
 ]
 }
+
+
+
+

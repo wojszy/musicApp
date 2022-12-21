@@ -29,71 +29,12 @@ class CategoryMusic extends StatefulWidget {
 
 class _CategoryMusicState extends State<CategoryMusic> {
   //List<CategoryModel> categories = <CategoryModel>[];
-  late List<MySong> songs;
+  //late List<MySong> songs;
   late Color _selectedColor;
   bool _isPlaying = false;
   String selectedSong = '';
   String songName = '';
   String songArtist = '';
-  getDataSong(name, artist) {
-    setState(() {
-      songName = name;
-      songArtist = artist;
-    });
-    // @override
-    // initState() {
-    //   super.initState();
-    //   setupAlan();
-    // }
-  }
-
-  // getUrl(url) {
-  //   setState(() {
-  //     selectedSong = url;
-  //   });
-  // }
-
-  // static AudioPlayer _audioPlayer = AudioPlayer();
-
-  // _playMusic(playlist, index) {
-  //   //_audioPlayer.setUrl(url);
-  //   setState(() {
-  //     _isPlaying = true;
-  //   });
-  //   _audioPlayer.setAudioSource(playlist, initialIndex: index, initialPosition: Duration.zero);
-  //   _audioPlayer.play();
-  // }
-
-  // _stopMusic() {
-  //   setState(() {
-  //     _isPlaying = false;
-  //   });
-  //   _audioPlayer.stop();
-  // }
-
-  // _pauseMusic() {
-  //   setState(() {
-  //     _isPlaying = false;
-  //   });
-  //   _audioPlayer.pause();
-  // }
-
-  // setupAlan() {
-  //   AlanVoice.addButton("a0bfd35a2c6bc34391f94ad34f381b302e956eca572e1d8b807a3e2338fdd0dc/stage",
-  //       buttonAlign: AlanVoice.BUTTON_ALIGN_RIGHT);
-
-  //   AlanVoice.callbacks.add((command) => _handleCommand(command.data, PlayerModel()));
-  // }
-
-  // void _handleCommand(Map<String, dynamic> response, PlayerModel playerModel) {
-  //   switch (response["command"]) {
-  //     case "pause":
-  //       // print(
-  //       //     "EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");
-  //       Provider.of<PlayerModel>(context, listen: false).pauseMusic();
-  //       break;
-  //   }
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -200,6 +141,7 @@ class _CategoryMusicState extends State<CategoryMusic> {
 
   Widget buildSongs(List<MySong> songs, String category, playerModel) {
     List<AudioSource> songPlaylist = [];
+    songs.removeWhere((element) => element.category != category);
     for (var song in songs) {
       if (song.category == category) {
         songPlaylist.add(
@@ -209,7 +151,7 @@ class _CategoryMusicState extends State<CategoryMusic> {
       }
     }
 
-    final playlist = ConcatenatingAudioSource(
+    var playlist = ConcatenatingAudioSource(
         // Start loading next item just before reaching it
         useLazyPreparation: true,
         // Customise the shuffle algorithm
@@ -226,6 +168,7 @@ class _CategoryMusicState extends State<CategoryMusic> {
                 child: ListTile(
                 onTap: () {
                   playerModel.ChangePlayerState(songs, index);
+
                   //getUrl(songs[index].url);
                   playerModel.stopMusic();
                   if (playerModel.audioPlayer.playing) {
