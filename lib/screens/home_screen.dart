@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:alan_voice/alan_voice.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -55,10 +57,10 @@ class _HomeScreenState extends State<HomeScreen> {
     AlanVoice.addButton("a0bfd35a2c6bc34391f94ad34f381b302e956eca572e1d8b807a3e2338fdd0dc/stage",
         buttonAlign: AlanVoice.BUTTON_ALIGN_RIGHT);
 
-    AlanVoice.callbacks.add((command) => _handleCommand(command.data, PlayerModel(), CategoryModel()));
+    AlanVoice.onCommand.add((command) => _handleCommand(command.data, PlayerModel(), CategoryModel()));
   }
 
-  void _handleCommand(Map<String, dynamic> response, PlayerModel playerModel, CategoryModel categoryModel) {
+  void _handleCommand(Map<String, dynamic> response, PlayerModel playerModel, CategoryModel categoryModel) async {
     switch (response["command"]) {
       case "play":
         //Provider.of<PlayerModel>(context, listen: false).playMusic();
@@ -103,7 +105,7 @@ class _HomeScreenState extends State<HomeScreen> {
         break;
 
       case "play_category":
-        fetchSongsList();
+        await fetchSongsList();
         final categoryAi = response["category"];
         List<AudioSource> categoryPlaylist_list = [];
 
@@ -125,8 +127,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
           final categoryPlaylist =
               ConcatenatingAudioSource(useLazyPreparation: true, shuffleOrder: DefaultShuffleOrder(), children: categoryPlaylist_list);
-          if (Provider.of<PlayerModel>(context, listen: false).audioPlayer.playing) {
+          if (Provider.of<PlayerModel>(context, listen: false).isPlaying == true) {
             Provider.of<PlayerModel>(context, listen: false).stopMusic();
+            Provider.of<PlayerModel>(context, listen: false).ChangePlayerState(songs, 0);
+            Provider.of<PlayerModel>(context, listen: false).playMusic(categoryPlaylist, 0);
           } else {
             Provider.of<PlayerModel>(context, listen: false).ChangePlayerState(songs, 0);
             Provider.of<PlayerModel>(context, listen: false).playMusic(categoryPlaylist, 0);
@@ -137,33 +141,31 @@ class _HomeScreenState extends State<HomeScreen> {
 
         break;
       case "play_music":
+        await fetchSongsList();
         final musicAi = response["music"];
-        fetchSongsList();
-        List<AudioSource> searchPlaylist_list = [];
-        if (musicAi == null) {
-          print("To jest null");
-        } else {
-          songs.removeWhere((element) => element.name.toLowerCase() != musicAi);
-          for (var song in songs) {
-            if (song.name.toLowerCase() == musicAi) {
-              searchPlaylist_list.add(AudioSource.uri(Uri.parse(song.url)));
-            }
-          }
-          final searchSong =
-              ConcatenatingAudioSource(useLazyPreparation: true, shuffleOrder: DefaultShuffleOrder(), children: searchPlaylist_list);
-          if (Provider.of<PlayerModel>(context, listen: false).audioPlayer.playing) {
-            Provider.of<PlayerModel>(context, listen: false).stopMusic();
-          } else {
-            Provider.of<PlayerModel>(context, listen: false).ChangePlayerState(songs, 0);
-            Provider.of<PlayerModel>(context, listen: false).playMusic(searchSong, 0);
-            // Provider.of<PlayerModel>(context, listen: false)
-            //     .audioPlayer
-            //     .setAudioSource(searchSong, initialIndex: 0, initialPosition: Duration.zero);
-            // Provider.of<PlayerModel>(context, listen: false).audioPlayer.play();
-          }
 
-          //   print(song.name);
+        List<AudioSource> searchPlayList_list = [];
+        Provider.of<PlayerModel>(context, listen: false).audioPlayer.pause();
+        log("Siema1: $songs");
+        songs.removeWhere((element) => element.name != musicAi);
+        log("Siema2: $songs");
+        for (var song in songs) {
+          {
+            log("logchuj");
+            searchPlayList_list.add(AudioSource.uri(Uri.parse(song.url)));
+          }
         }
+
+        final searchPlayList = ConcatenatingAudioSource(children: searchPlayList_list);
+        if (Provider.of<PlayerModel>(context, listen: false).isPlaying == true) {
+          Provider.of<PlayerModel>(context, listen: false).stopMusic();
+          Provider.of<PlayerModel>(context, listen: false).ChangePlayerState(songs, 0);
+          Provider.of<PlayerModel>(context, listen: false).playMusic(searchPlayList, 0);
+        } else {
+          Provider.of<PlayerModel>(context, listen: false).ChangePlayerState(songs, 0);
+          Provider.of<PlayerModel>(context, listen: false).playMusic(searchPlayList, 0);
+        }
+        print("piosenka: ${searchPlayList}");
 
         break;
     }

@@ -30,7 +30,7 @@
         "url": "https://cdn.pixabay.com/audio/2022/11/23/audio_5510021645.mp3",
         "artist": "AlexiAction",
         "image": "https://cdn.pixabay.com/audio/2022/11/23/21-30-37-211_200x200.jpg",
-        "category": "rock"
+        "category": "electronic"
         },
         {
             "id":5,
@@ -70,7 +70,7 @@
                 "url": "https://cdn.pixabay.com/audio/2022/12/13/audio_9543a3b22b.mp3",
                 "artist": "The Mountain",
                 "image": "https://cdn.pixabay.com/audio/2022/12/13/09-56-15-492_200x200.png",
-                "category": "rock"
+                "category": "jazz"
             },
             {
                 "id":10,
