@@ -8,25 +8,32 @@ class PlayerModel extends ChangeNotifier {
   int index = 0;
   AudioPlayer audioPlayer = AudioPlayer();
   bool isPlaying = false;
-  // Widget buildSongs(List<MySong> songs, String category, playerModel)
-  //   List<AudioSource> songPlaylist = [];
-  //   for (var song in songs) {
-  //     if (song.category == category) {
-  //       songPlaylist.add(
-  //         AudioSource.uri(Uri.parse(song.url)),
-  //       );
-  //       //   print(song.name);
-  //     }
-  //   }
+  bool enable = false;
+  int didChanged = 0;
+  bool isShuffle = false;
+  String currentSongTitle = '';
+  void changeMusic() async {
+    audioPlayer.processingStateStream.listen((state) {
+      if (state == ProcessingState.completed) {
+        // audioPlayer.pause();
+        // audioPlayer.play();
+      }
 
-  // final playlist = ConcatenatingAudioSource(
-  //     // Start loading next item just before reaching it
-  //     useLazyPreparation: true,
-  //     // Customise the shuffle algorithm
-  //     shuffleOrder: DefaultShuffleOrder(),
-  //     // Specify the playlist items
-  //     children: categoryPlaylist);
+      notifyListeners();
+    });
+  }
 
+
+
+  void onShuffleButtonPressed() async {
+    enable = !audioPlayer.shuffleModeEnabled;
+    if (enable) {
+      await audioPlayer.shuffle();
+    }
+    await audioPlayer.setShuffleModeEnabled(enable);
+    isShuffle = !isShuffle;
+    notifyListeners();
+  }
 
   void stopMusic() {
     isPlaying = false;
@@ -50,15 +57,6 @@ class PlayerModel extends ChangeNotifier {
     index = newIndex;
     isPlaying = true;
     audioPlayer.setAudioSource(playlist, initialIndex: index, initialPosition: Duration.zero);
-    audioPlayer.play();
-
-    notifyListeners();
-  }
-
-  void playMusicCategory(playlist) {
-    //_audioPlayer.setUrl(url);
-    isPlaying = true;
-    audioPlayer.setAudioSource(playlist, initialPosition: Duration.zero);
     audioPlayer.play();
 
     notifyListeners();

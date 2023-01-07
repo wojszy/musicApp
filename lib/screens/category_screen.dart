@@ -28,8 +28,6 @@ class CategoryMusic extends StatefulWidget {
 }
 
 class _CategoryMusicState extends State<CategoryMusic> {
-  //List<CategoryModel> categories = <CategoryModel>[];
-  //late List<MySong> songs;
   late Color _selectedColor;
   bool _isPlaying = false;
   String selectedSong = '';
@@ -38,7 +36,6 @@ class _CategoryMusicState extends State<CategoryMusic> {
 
   @override
   Widget build(BuildContext context) {
-    // String? currentPlaying;
     return Consumer<PlayerModel>(
       builder: (context, playerModel, child) => Container(
           decoration: BoxDecoration(
@@ -70,7 +67,6 @@ class _CategoryMusicState extends State<CategoryMusic> {
                   ),
                   const SizedBox(height: 30),
                   _PlayOrShuffleSwitch(),
-                  // Text('Category: ' + widget.category, style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
                   SizedBox(
                     height: MediaQuery.of(context).size.height * 0.3,
                     child: buildSongs(widget.songs, widget.category, playerModel),
@@ -79,26 +75,30 @@ class _CategoryMusicState extends State<CategoryMusic> {
                     height: 40,
                   ),
                   SizedBox(
-                    height: 30,
-                    child: Text(
-                      'Current Playing: ${playerModel.songs[playerModel.index].artist}'
-                      ' - '
-                      '${playerModel.songs[playerModel.index].name}',
-                      //textAlign: TextAlign.left,
-                    ),
-                  ),
+                      height: 30,
+                      child: StreamBuilder(
+                        stream: playerModel.audioPlayer.sequenceStream,
+                        builder: (context, snapshot) {
+                          if (playerModel.audioPlayer.currentIndex == null) {
+                            return Text('');
+                          } else {
+                            songArtist = playerModel.songs[playerModel.audioPlayer.currentIndex!.toInt()].artist;
+                            songName = playerModel.songs[playerModel.audioPlayer.currentIndex!.toInt()].name;
 
+                            playerModel.changeMusic();
+                            return Text('Current Playing: $songArtist - $songName');
+                          }
+                        },
+                      )),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       InkWell(
                           onTap: () {
                             playerModel.audioPlayer.seekToPrevious();
-                            // _audioPlayer.seekToPrevious();
 
                             if (playerModel.index == 0) {
                               playerModel.audioPlayer.seek(Duration.zero, index: 0);
-                              //_audioPlayer.seek(Duration.zero, index: 0);
                             } else {
                               playerModel.decrementIndex();
                             }
@@ -139,25 +139,19 @@ class _CategoryMusicState extends State<CategoryMusic> {
     );
   }
 
-  Widget buildSongs(List<MySong> songs, String category, playerModel) {
+  Widget buildSongs(List<MySong> songs, String category, PlayerModel playerModel) {
     List<AudioSource> songPlaylist = [];
+
     songs.removeWhere((element) => element.category != category);
     for (var song in songs) {
       if (song.category == category) {
         songPlaylist.add(
           AudioSource.uri(Uri.parse(song.url)),
         );
-        //   print(song.name);
       }
     }
 
-    var playlist = ConcatenatingAudioSource(
-        // Start loading next item just before reaching it
-        useLazyPreparation: true,
-        // Customise the shuffle algorithm
-        shuffleOrder: DefaultShuffleOrder(),
-        // Specify the playlist items
-        children: songPlaylist);
+    var playlist = ConcatenatingAudioSource(useLazyPreparation: true, shuffleOrder: DefaultShuffleOrder(), children: songPlaylist);
     return ListView.builder(
       scrollDirection: Axis.vertical,
       shrinkWrap: true,
@@ -169,7 +163,6 @@ class _CategoryMusicState extends State<CategoryMusic> {
                 onTap: () {
                   playerModel.ChangePlayerState(songs, index);
 
-                  //getUrl(songs[index].url);
                   playerModel.stopMusic();
                   if (playerModel.audioPlayer.playing) {
                     playerModel.audioPlayer.stop();
@@ -205,69 +198,69 @@ class _PlayOrShuffleSwitchState extends State<_PlayOrShuffleSwitch> {
   @override
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          isPlay = !isPlay;
-        });
-      },
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Container(
-          height: 50,
-          width: width,
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15.0)),
-          child: Stack(children: [
-            AnimatedPositioned(
-              duration: const Duration(milliseconds: 100),
-              left: isPlay ? 0 : width * 0.45,
-              child: Container(
-                height: 50,
-                width: width * 0.47,
-                decoration: BoxDecoration(color: Colors.deepPurple, borderRadius: BorderRadius.circular(15.0)),
-              ),
-            ),
-            Row(
-              children: [
-                Expanded(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Row(
-                        children: [
-                          Center(
-                            child: Text(
-                              'Play',
-                              style: TextStyle(color: isPlay ? Colors.white : Colors.deepPurple, fontSize: 17),
-                            ),
+    return Consumer<PlayerModel>(
+        builder: (context, playerModel, child) => GestureDetector(
+              onTap: () {
+                playerModel.onShuffleButtonPressed();
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Container(
+                  height: 50,
+                  width: width,
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15.0)),
+                  child: Stack(children: [
+                    AnimatedPositioned(
+                      duration: const Duration(milliseconds: 100),
+                      left: playerModel.isShuffle == false ? 0 : width * 0.45,
+                      child: Container(
+                        height: 50,
+                        width: width * 0.47,
+                        decoration: BoxDecoration(color: Colors.deepPurple, borderRadius: BorderRadius.circular(15.0)),
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Row(
+                                children: [
+                                  Center(
+                                    child: Text(
+                                      'Play',
+                                      style:
+                                          TextStyle(color: playerModel.isShuffle == false ? Colors.white : Colors.deepPurple, fontSize: 17),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Icon(Icons.play_circle, color: playerModel.isShuffle == false ? Colors.white : Colors.deepPurple)
+                                ],
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 10),
-                          Icon(Icons.play_circle, color: isPlay ? Colors.white : Colors.deepPurple)
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Center(
-                        child: Text(
-                          'Shuffle',
-                          style: TextStyle(color: isPlay ? Colors.deepPurple : Colors.white, fontSize: 17),
                         ),
-                      ),
-                      const SizedBox(width: 10),
-                      Icon(Icons.shuffle, color: isPlay ? Colors.deepPurple : Colors.white)
-                    ],
-                  ),
-                )
-              ],
-            ),
-          ]),
-        ),
-      ),
-    );
+                        Expanded(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Center(
+                                child: Text(
+                                  'Shuffle',
+                                  style: TextStyle(color: playerModel.isShuffle == false ? Colors.deepPurple : Colors.white, fontSize: 17),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Icon(Icons.shuffle, color: playerModel.isShuffle == false ? Colors.deepPurple : Colors.white)
+                            ],
+                          ),
+                        )
+                      ],
+                    ),
+                  ]),
+                ),
+              ),
+            ));
   }
 }

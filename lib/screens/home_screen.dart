@@ -25,7 +25,8 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   List<CategoryModel> categories = <CategoryModel>[];
   List<MySong> songs = <MySong>[];
-
+  String songName = '';
+  String songArtist = '';
   // static AudioPlayer _audioPlayer = AudioPlayer();
   @override
   void initState() {
@@ -62,18 +63,42 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _handleCommand(Map<String, dynamic> response, PlayerModel playerModel, CategoryModel categoryModel) async {
     switch (response["command"]) {
-      case "play":
-        //Provider.of<PlayerModel>(context, listen: false).playMusic();
-        break;
       case "pause":
         Provider.of<PlayerModel>(context, listen: false).pauseMusic();
         break;
       case "unpause":
         Provider.of<PlayerModel>(context, listen: false).unPauseMusic();
         break;
-
+      case "shuffle":
+        Provider.of<PlayerModel>(context, listen: false).enable = true;
+        if (Provider.of<PlayerModel>(context, listen: false).enable) {
+          await Provider.of<PlayerModel>(context, listen: false).audioPlayer.shuffle();
+        }
+        await Provider.of<PlayerModel>(context, listen: false)
+            .audioPlayer
+            .setShuffleModeEnabled(Provider.of<PlayerModel>(context, listen: false).enable);
+        Provider.of<PlayerModel>(context, listen: false).isShuffle = true;
+        Provider.of<PlayerModel>(context, listen: false).notifyListeners();
+        break;
+      case "unshuffle":
+        Provider.of<PlayerModel>(context, listen: false).enable = false;
+        if (Provider.of<PlayerModel>(context, listen: false).enable) {
+          await Provider.of<PlayerModel>(context, listen: false).audioPlayer.shuffle();
+        }
+        await Provider.of<PlayerModel>(context, listen: false)
+            .audioPlayer
+            .setShuffleModeEnabled(Provider.of<PlayerModel>(context, listen: false).enable);
+        Provider.of<PlayerModel>(context, listen: false).isShuffle = false;
+        Provider.of<PlayerModel>(context, listen: false).notifyListeners();
+        break;
       case "volumeUp":
         double val = _val * 1.2;
+        VolumeControl.setVolume(val);
+        print("current val: $_val");
+
+        break;
+      case "volumeDown":
+        double val = _val * 0.8;
         VolumeControl.setVolume(val);
         print("current val: $_val");
 
@@ -85,6 +110,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Provider.of<PlayerModel>(context, listen: false).audioPlayer.seek(Duration.zero, index: 0);
         } else {}
         if (Provider.of<PlayerModel>(context, listen: false).audioPlayer.playing == false) {
+          Provider.of<PlayerModel>(context, listen: false).isPlaying = true;
           Provider.of<PlayerModel>(context, listen: false).audioPlayer.play();
         }
         break;
@@ -135,8 +161,6 @@ class _HomeScreenState extends State<HomeScreen> {
             Provider.of<PlayerModel>(context, listen: false).ChangePlayerState(songs, 0);
             Provider.of<PlayerModel>(context, listen: false).playMusic(categoryPlaylist, 0);
           }
-
-          //   print(song.name);
         }
 
         break;
@@ -146,12 +170,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
         List<AudioSource> searchPlayList_list = [];
         Provider.of<PlayerModel>(context, listen: false).audioPlayer.pause();
-        log("Siema1: $songs");
+
         songs.removeWhere((element) => element.name != musicAi);
-        log("Siema2: $songs");
+
         for (var song in songs) {
           {
-            log("logchuj");
             searchPlayList_list.add(AudioSource.uri(Uri.parse(song.url)));
           }
         }
@@ -165,7 +188,6 @@ class _HomeScreenState extends State<HomeScreen> {
           Provider.of<PlayerModel>(context, listen: false).ChangePlayerState(songs, 0);
           Provider.of<PlayerModel>(context, listen: false).playMusic(searchPlayList, 0);
         }
-        print("piosenka: ${searchPlayList}");
 
         break;
     }
@@ -213,14 +235,21 @@ class _HomeScreenState extends State<HomeScreen> {
                     height: 100,
                   ),
                   SizedBox(
-                    height: 30,
-                    child: Text(
-                      'Current Playing: ${playerModel.songs[playerModel.index].artist}'
-                      ' - '
-                      '${playerModel.songs[playerModel.index].name}',
-                      //textAlign: TextAlign.left,
-                    ),
-                  ),
+                      height: 30,
+                      child: StreamBuilder(
+                        stream: playerModel.audioPlayer.sequenceStream,
+                        builder: (context, snapshot) {
+                          if (playerModel.audioPlayer.currentIndex == null) {
+                            return Text('');
+                          } else {
+                            songArtist = playerModel.songs[playerModel.audioPlayer.currentIndex!.toInt()].artist;
+                            songName = playerModel.songs[playerModel.audioPlayer.currentIndex!.toInt()].name;
+
+                            playerModel.changeMusic();
+                            return Text('Current Playing: $songArtist - $songName');
+                          }
+                        },
+                      )),
                   SizedBox(
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -282,6 +311,7 @@ class _DiscoverMusic extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final _formKey = GlobalKey<FormState>();
     return Consumer<PlayerModel>(
       builder: (context, playerModel, child) => Padding(
         padding: const EdgeInsets.all(20.0),
@@ -307,17 +337,7 @@ class _DiscoverMusic extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            TextFormField(
-              decoration: InputDecoration(
-                isDense: true,
-                filled: true,
-                fillColor: Colors.white,
-                hintText: 'Search song',
-                hintStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Colors.grey.shade500),
-                prefixIcon: Icon(Icons.search, color: Colors.grey.shade500),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.0), borderSide: BorderSide.none),
-              ),
-            ),
+            AutocompleteBasic(),
           ],
         ),
       ),
@@ -325,34 +345,157 @@ class _DiscoverMusic extends StatelessWidget {
   }
 }
 
-// class _CustomNavBar extends StatelessWidget {
-//   const _CustomNavBar({
-//     Key? key,
-//   }) : super(key: key);
+class AutocompleteBasic extends StatefulWidget {
+  AutocompleteBasic({super.key});
+  static List<String> _kOptions = <String>[];
+  static List<String> searchName = <String>[];
 
-//   @override
-//   Widget build(BuildContext context) {
-//     return BottomNavigationBar(
-//         type: BottomNavigationBarType.fixed,
-//         backgroundColor: Colors.deepPurple.shade800,
-//         selectedItemColor: Colors.white,
-//         unselectedItemColor: Colors.white,
-//         items: const [
-//           BottomNavigationBarItem(
-//             icon: Icon(Icons.home),
-//             label: 'Home',
-//           ),
-//           BottomNavigationBarItem(
-//             icon: Icon(Icons.mic),
-//             label: 'Talk',
-//           ),
-//           BottomNavigationBarItem(
-//             icon: Icon(Icons.featured_play_list_outlined),
-//             label: 'My Playlist',
-//           ),
-//         ]);
-//   }
-// }
+  @override
+  State<AutocompleteBasic> createState() => _AutocompleteBasicState();
+}
+
+class _AutocompleteBasicState extends State<AutocompleteBasic> {
+  List<MySong> songs = <MySong>[];
+  List<MySong> autoCompleteSongs = <MySong>[];
+  @override
+  void initState() {
+    fetchSongsList();
+    autoCompleteFetch();
+    super.initState();
+  }
+
+  fetchSongsList() async {
+    // List<MySong> songs = <MySong>[];
+    final songJson = await rootBundle.loadString("assets/songs.json");
+    songs = MySongList.fromJson(songJson).songs;
+  }
+
+  autoCompleteFetch() async {
+    // List<MySong> songs = <MySong>[];
+    final songJson = await rootBundle.loadString("assets/songs.json");
+    autoCompleteSongs = MySongList.fromJson(songJson).songs;
+
+    for (var song in autoCompleteSongs) {
+      AutocompleteBasic._kOptions.add(song.artist + ' - ' + song.name);
+      AutocompleteBasic.searchName.add(song.name);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<PlayerModel>(
+        builder: (context, playerModel, child) => Autocomplete<String>(
+              optionsBuilder: (TextEditingValue textEditingValue) {
+                if (textEditingValue.text.toLowerCase() == '') {
+                  return const Iterable<String>.empty();
+                }
+                return AutocompleteBasic._kOptions.where((String option) {
+                  return option.toLowerCase().contains(textEditingValue.text.toLowerCase());
+                });
+              },
+              optionsViewBuilder: (BuildContext context, void Function(String) onSelected, Iterable<String> options) {
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 0, 47, 0),
+                  child: Align(
+                    alignment: Alignment.topLeft,
+                    child: Material(
+                      elevation: 4.0,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxHeight: 300, maxWidth: 350),
+                        child: ListView(
+                          scrollDirection: Axis.vertical,
+                          shrinkWrap: true,
+                          padding: EdgeInsets.zero,
+                          children: options.map((opt) {
+                            return InkWell(
+                                onTap: () async {
+                                  await fetchSongsList();
+
+                                  List<AudioSource> searchPlayList_list = [];
+                                  playerModel.audioPlayer.pause();
+
+                                  songs.removeWhere((element) =>
+                                      !(element.artist.toLowerCase() + ' - ' + element.name.toLowerCase()).contains(opt.toLowerCase()));
+
+                                  for (var song in songs) {
+                                    {
+                                      searchPlayList_list.add(AudioSource.uri(Uri.parse(song.url)));
+                                    }
+                                  }
+
+                                  final searchPlayList = ConcatenatingAudioSource(children: searchPlayList_list);
+                                  if (playerModel.isPlaying == true) {
+                                    playerModel.stopMusic();
+                                    playerModel.ChangePlayerState(songs, 0);
+                                    playerModel.playMusic(searchPlayList, 0);
+                                  } else {
+                                    playerModel.ChangePlayerState(songs, 0);
+                                    playerModel.playMusic(searchPlayList, 0);
+                                  }
+                                  onSelected(opt);
+                                },
+                                child: Align(
+                                  alignment: Alignment.topLeft,
+                                  child: Container(
+                                    //  width: double.infinity,
+                                    padding: EdgeInsets.all(10),
+                                    child: Text(
+                                      opt,
+                                      style: TextStyle(
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                  ),
+                                ));
+                          }).toList(),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+              fieldViewBuilder: (
+                context,
+                controller,
+                focusNode,
+                onEditingComplete,
+              ) {
+                return TextField(
+                  controller: controller,
+                  focusNode: focusNode,
+                  onEditingComplete: onEditingComplete,
+                  decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
+                      ),
+                      hintText: "Search music",
+                      hintStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Colors.grey.shade500),
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: Color.fromARGB(255, 101, 165, 238),
+                      ),
+                      suffixIcon: IconButton(
+                        icon: Icon(Icons.clear),
+                        color: Color.fromARGB(255, 101, 165, 238),
+                        onPressed: () {
+                          controller.clear();
+                          focusNode.unfocus();
+                        },
+                      )),
+                );
+              },
+            ));
+  }
+}
 
 class _CustomAppBar extends StatelessWidget with PreferredSizeWidget {
   const _CustomAppBar({Key? key}) : super(key: key);
@@ -362,12 +505,11 @@ class _CustomAppBar extends StatelessWidget with PreferredSizeWidget {
     return AppBar(
       backgroundColor: Colors.transparent,
       elevation: 0,
-      leading: const Icon(Icons.grid_view_rounded),
+      // leading: const Icon(Icons.grid_view_rounded),
     );
   }
 
   @override
-  // TODO: implement preferredSize
   Size get preferredSize => Size.fromHeight(56.0);
 }
 
