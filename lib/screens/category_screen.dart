@@ -95,12 +95,14 @@ class _CategoryMusicState extends State<CategoryMusic> {
                     children: [
                       InkWell(
                           onTap: () {
-                            playerModel.audioPlayer.seekToPrevious();
+                            if (playerModel.isPlaying) {
+                              playerModel.audioPlayer.seekToPrevious();
 
-                            if (playerModel.index == 0) {
-                              playerModel.audioPlayer.seek(Duration.zero, index: 0);
-                            } else {
-                              playerModel.decrementIndex();
+                              if (playerModel.index == 0) {
+                                playerModel.audioPlayer.seek(Duration.zero, index: 0);
+                              } else {
+                                playerModel.decrementIndex();
+                              }
                             }
                           },
                           child: Icon(Icons.arrow_back_ios_outlined)),
@@ -109,7 +111,9 @@ class _CategoryMusicState extends State<CategoryMusic> {
                               ? GestureDetector(
                                   child: Icon(Icons.pause),
                                   onTap: () {
-                                    playerModel.pauseMusic();
+                                    if (playerModel.isPlaying) {
+                                      playerModel.pauseMusic();
+                                    }
                                   },
                                 )
                               : GestureDetector(
@@ -122,11 +126,13 @@ class _CategoryMusicState extends State<CategoryMusic> {
                                   })),
                       InkWell(
                           onTap: () {
-                            playerModel.audioPlayer.seekToNext();
+                            if (playerModel.isPlaying) {
+                              playerModel.audioPlayer.seekToNext();
 
-                            playerModel.incrementIndex();
-                            if (playerModel.index == 0) {
-                              playerModel.audioPlayer.seek(Duration.zero, index: 0);
+                              playerModel.incrementIndex();
+                              if (playerModel.index == 0) {
+                                playerModel.audioPlayer.seek(Duration.zero, index: 0);
+                              }
                             }
                           },
                           child: Icon(Icons.arrow_forward_ios_outlined)),

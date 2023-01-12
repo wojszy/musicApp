@@ -9,21 +9,15 @@ class PlayerModel extends ChangeNotifier {
   AudioPlayer audioPlayer = AudioPlayer();
   bool isPlaying = false;
   bool enable = false;
-  int didChanged = 0;
   bool isShuffle = false;
-  String currentSongTitle = '';
+
   void changeMusic() async {
     audioPlayer.processingStateStream.listen((state) {
-      if (state == ProcessingState.completed) {
-        // audioPlayer.pause();
-        // audioPlayer.play();
-      }
+      if (state == ProcessingState.completed) {}
 
       notifyListeners();
     });
   }
-
-
 
   void onShuffleButtonPressed() async {
     enable = !audioPlayer.shuffleModeEnabled;

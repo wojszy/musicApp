@@ -27,7 +27,6 @@ class _HomeScreenState extends State<HomeScreen> {
   List<MySong> songs = <MySong>[];
   String songName = '';
   String songArtist = '';
-  // static AudioPlayer _audioPlayer = AudioPlayer();
   @override
   void initState() {
     super.initState();
@@ -37,11 +36,9 @@ class _HomeScreenState extends State<HomeScreen> {
     initVolumeState();
   }
 
-//init volume_control plugin
   Future<void> initVolumeState() async {
     if (!mounted) return;
 
-    //read the current volume
     _val = await VolumeControl.volume;
     setState(() {});
   }
@@ -120,7 +117,6 @@ class _HomeScreenState extends State<HomeScreen> {
         if (Provider.of<PlayerModel>(context, listen: false).index == 0) {
           Provider.of<PlayerModel>(context, listen: false).audioPlayer.seek(Duration.zero, index: 0);
           Provider.of<PlayerModel>(context, listen: false).isPlaying = true;
-          //_audioPlayer.seek(Duration.zero, index: 0);
         } else {
           Provider.of<PlayerModel>(context, listen: false).decrementIndex();
           if (Provider.of<PlayerModel>(context, listen: false).audioPlayer.playing == false) {
@@ -140,7 +136,8 @@ class _HomeScreenState extends State<HomeScreen> {
           print("Nie znaleziono");
         } else {
           final categoryImage = cat.imageUrl;
-          Navigator.push(
+
+          Navigator.pushReplacement(
               context, MaterialPageRoute(builder: (context) => CategoryMusic(songs: songs, category: categoryAi, imageUrl: categoryImage)));
 
           Provider.of<PlayerModel>(context, listen: false).audioPlayer.pause();
@@ -205,7 +202,6 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Scaffold(
           backgroundColor: Colors.transparent,
           appBar: const _CustomAppBar(),
-          //bottomNavigationBar: const _CustomNavBar(),
           body: SingleChildScrollView(
               child: Column(children: [
             const _DiscoverMusic(),
@@ -256,12 +252,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         InkWell(
                             onTap: () {
-                              playerModel.audioPlayer.seekToPrevious();
+                              if (playerModel.isPlaying) {
+                                playerModel.audioPlayer.seekToPrevious();
 
-                              if (playerModel.index == 0) {
-                                playerModel.audioPlayer.seek(Duration.zero, index: 0);
-                              } else {
-                                playerModel.decrementIndex();
+                                if (playerModel.index == 0) {
+                                  playerModel.audioPlayer.seek(Duration.zero, index: 0);
+                                } else {
+                                  playerModel.decrementIndex();
+                                }
                               }
                             },
                             child: Icon(Icons.arrow_back_ios_outlined)),
@@ -270,7 +268,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ? GestureDetector(
                                     child: Icon(Icons.pause),
                                     onTap: () {
-                                      playerModel.pauseMusic();
+                                      if (playerModel.isPlaying) {
+                                        playerModel.pauseMusic();
+                                      }
                                     },
                                   )
                                 : GestureDetector(
@@ -283,11 +283,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                     })),
                         InkWell(
                             onTap: () {
-                              playerModel.audioPlayer.seekToNext();
+                              if (playerModel.isPlaying) {
+                                playerModel.audioPlayer.seekToNext();
 
-                              playerModel.incrementIndex();
-                              if (playerModel.index == 0) {
-                                playerModel.audioPlayer.seek(Duration.zero, index: 0);
+                                playerModel.incrementIndex();
+                                if (playerModel.index == 0) {
+                                  playerModel.audioPlayer.seek(Duration.zero, index: 0);
+                                }
                               }
                             },
                             child: Icon(Icons.arrow_forward_ios_outlined)),
@@ -365,13 +367,11 @@ class _AutocompleteBasicState extends State<AutocompleteBasic> {
   }
 
   fetchSongsList() async {
-    // List<MySong> songs = <MySong>[];
     final songJson = await rootBundle.loadString("assets/songs.json");
     songs = MySongList.fromJson(songJson).songs;
   }
 
   autoCompleteFetch() async {
-    // List<MySong> songs = <MySong>[];
     final songJson = await rootBundle.loadString("assets/songs.json");
     autoCompleteSongs = MySongList.fromJson(songJson).songs;
 
@@ -413,16 +413,13 @@ class _AutocompleteBasicState extends State<AutocompleteBasic> {
 
                                   List<AudioSource> searchPlayList_list = [];
                                   playerModel.audioPlayer.pause();
-
                                   songs.removeWhere((element) =>
                                       !(element.artist.toLowerCase() + ' - ' + element.name.toLowerCase()).contains(opt.toLowerCase()));
-
                                   for (var song in songs) {
                                     {
                                       searchPlayList_list.add(AudioSource.uri(Uri.parse(song.url)));
                                     }
                                   }
-
                                   final searchPlayList = ConcatenatingAudioSource(children: searchPlayList_list);
                                   if (playerModel.isPlaying == true) {
                                     playerModel.stopMusic();
@@ -437,11 +434,10 @@ class _AutocompleteBasicState extends State<AutocompleteBasic> {
                                 child: Align(
                                   alignment: Alignment.topLeft,
                                   child: Container(
-                                    //  width: double.infinity,
                                     padding: EdgeInsets.all(10),
                                     child: Text(
                                       opt,
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         color: Colors.black,
                                       ),
                                     ),
@@ -505,7 +501,6 @@ class _CustomAppBar extends StatelessWidget with PreferredSizeWidget {
     return AppBar(
       backgroundColor: Colors.transparent,
       elevation: 0,
-      // leading: const Icon(Icons.grid_view_rounded),
     );
   }
 
@@ -527,14 +522,12 @@ class _CategoryTileState extends State<CategoryTile> {
   @override
   void initState() {
     super.initState();
-    //categories = getCategories();
     fetchSongsList();
   }
 
   fetchSongsList() async {
     final songJson = await rootBundle.loadString("assets/songs.json");
     songs = MySongList.fromJson(songJson).songs;
-    // print(songs);
     setState(() {});
   }
 
