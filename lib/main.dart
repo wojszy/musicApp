@@ -33,7 +33,7 @@ class MyApp extends StatelessWidget {
               )),
       home: const HomeScreen(),
       getPages: [
-        GetPage(name: '/', page: () => const HomeScreen()),
+        GetPage(name: '/home', page: () => const HomeScreen()),
       ],
     );
   }

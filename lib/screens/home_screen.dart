@@ -92,12 +92,14 @@ class _HomeScreenState extends State<HomeScreen> {
         double val = _val * 1.2;
         VolumeControl.setVolume(val);
         print("current val: $_val");
+        setState(() {});
 
         break;
       case "volumeDown":
         double val = _val * 0.8;
         VolumeControl.setVolume(val);
         print("current val: $_val");
+        setState(() {});
 
         break;
       case "next":
@@ -136,8 +138,8 @@ class _HomeScreenState extends State<HomeScreen> {
           print("Nie znaleziono");
         } else {
           final categoryImage = cat.imageUrl;
-
-          Navigator.pushReplacement(
+          Navigator.popUntil(context, ModalRoute.withName('/'));
+          Navigator.push(
               context, MaterialPageRoute(builder: (context) => CategoryMusic(songs: songs, category: categoryAi, imageUrl: categoryImage)));
 
           Provider.of<PlayerModel>(context, listen: false).audioPlayer.pause();
@@ -421,6 +423,7 @@ class _AutocompleteBasicState extends State<AutocompleteBasic> {
                                     }
                                   }
                                   final searchPlayList = ConcatenatingAudioSource(children: searchPlayList_list);
+
                                   if (playerModel.isPlaying == true) {
                                     playerModel.stopMusic();
                                     playerModel.ChangePlayerState(songs, 0);
