@@ -89,18 +89,25 @@ class _HomeScreenState extends State<HomeScreen> {
         Provider.of<PlayerModel>(context, listen: false).notifyListeners();
         break;
       case "volumeUp":
-        double val = _val * 1.2;
-        VolumeControl.setVolume(val);
-        print("current val: $_val");
-        setState(() {});
+        if (_val < 1) {
+          double val = _val * 1.2;
+          VolumeControl.setVolume(val);
+          print("current val: $_val");
+          setState(() {
+            _val = val;
+          });
+        }
 
         break;
       case "volumeDown":
-        double val = _val * 0.8;
-        VolumeControl.setVolume(val);
-        print("current val: $_val");
-        setState(() {});
-
+        if (_val > 0) {
+          double val = _val * 0.8;
+          VolumeControl.setVolume(val);
+          print("current val: $_val");
+          setState(() {
+            _val = val;
+          });
+        }
         break;
       case "next":
         Provider.of<PlayerModel>(context, listen: false).audioPlayer.seekToNext();
